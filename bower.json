@@ -1,0 +1,20 @@
+{
+  "name": "sliderman",
+  "main": "sliderman.js",
+  "version": "0.0.1",
+  "description": "Create sliding and resizable menu components using JQueryUI and Flexbox.",
+  "keywords": [
+    "menu",
+    "sliding"
+  ],
+  "authors": [
+    "Tom Davies <tvdavies@gmail.com> (http://github.com/tvdavies)"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/tvdavies/sliderman",
+  "devDependencies": {},
+  "dependencies": {
+    "jquery": "~1.11.0",
+    "jqueryui": "~1.11.4"
+  }
+}
