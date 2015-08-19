@@ -133,6 +133,7 @@ span.sliderman-panel-toolbar-button
 div.sliderman-panel-content
 {
     flex: 1;
+    overflow: auto;
 }
 
 div.sliderman-panel-left

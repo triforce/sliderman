@@ -3,7 +3,7 @@
  * Created by Tom Davies
  * Slider-man, Slider-man. Does whatever a slider can.
  */
-(function ($, undefined) {
+(function (window, $, undefined) {
     var minSize = 30;
     var initialised = false;
 
@@ -43,7 +43,7 @@
 
         // Get all elements with sliderman-main class and append to middle buffer
         $('.sliderman-main').each(function () {
-           $middleBuffer.append(this);
+            $middleBuffer.append(this);
         });
 
         if ($middleBuffer.children().length > 0) {
@@ -69,20 +69,41 @@
         var hResize = function (event) {
             event.preventDefault();
             $(document).on('mousemove', move);
+            $(document).on('mousemove', throttledWindowResize);
             $(document).on('mouseup', mouseUp);
         };
 
         var vResize = function (event) {
             event.preventDefault();
             $(document).on('mousemove', move);
+            $(document).on('mousemove', throttledWindowResize);
             $(document).on('mouseup', mouseUp);
         };
 
         var mouseUp = function (event) {
             event.preventDefault();
             $(document).unbind('mousemove', move);
+            $(document).unbind('mousemove', throttledWindowResize);
             $(document).unbind('mouseup', mouseUp);
         };
+
+        var throttledWindowResize = (function () {
+            var func = function () {
+                console.log('Resize');
+                $(window).resize();
+            };
+            var wait = 100;
+            var timeout;
+            return function() {
+                var context = this, args = arguments;
+                var later = function() {
+                    timeout = null;
+                    func.apply(context, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }());
 
         var move = function (event) {
             event.preventDefault();
@@ -97,20 +118,20 @@
 
             if (options.position === 'left' || options.position === 'right') {
                 if (options.position === 'right') {
-                    sizePixels = Math.max(w - x + ($resizer.width() / 2), 0);
+                    sizePixels = Math.max(w - x - ($resizer.width() / 2), 0);
                 } else {
-                    sizePixels = Math.max(x - ($resizer.width() / 2), 0);
+                    sizePixels = Math.max(x + ($resizer.width() / 2), 0);
                 }
 
                 sizePercent = (sizePixels / w) * 100;
                 $wrapper.css('width', Math.min(sizePercent, 50) + '%');
             } else {
                 if (options.position === 'top') {
-                    sizePixels = Math.max(y + ($resizer.height() / 2), 0);
+                    sizePixels = Math.max(y - ($resizer.height() / 2), 0);
                 } else {
-                    sizePixels = Math.max(h - y - ($resizer.height() / 2), 0);
+                    sizePixels = Math.max(h - y + ($resizer.height() / 2), 0);
                 }
-                
+
                 sizePercent = (sizePixels / h) * 100;
                 $wrapper.css('height', Math.min(sizePercent, 50) + '%');
             }
@@ -149,7 +170,7 @@
             //     $leftMenuBar.append($menuItem);
             //     $leftMenuBar.show();
             // }
-            
+
             // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', hResize);
@@ -161,7 +182,7 @@
             //     $topMenuBar.append($menuItem);
             //     $topMenuBar.show();
             // }
-            
+
             // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', vResize);
@@ -173,7 +194,7 @@
             //     $bottomMenuBar.append($menuItem);
             //     $bottomMenuBar.show();
             // }
-            
+
             // Move element into container
             $resizer.prependTo($wrapper);
             $resizer.on('mousedown', vResize);
@@ -225,6 +246,8 @@
         $element.toggle('slide', {
             direction: slideDirection
         }, 100, function () {
+            $(window).resize();
+
             if ($.isFunction(callback)) {
                 callback();
             }
@@ -245,6 +268,8 @@
         $element.toggle('slide', {
             direction: slideDirection
         }, 100, function () {
+            $(window).resize();
+            
             if ($.isFunction(callback)) {
                 callback();
             }
@@ -254,6 +279,7 @@
     /**
      * Generate API for the slider element
      * @param $element
+     * @param options
      * @returns {{}}
      */
     function api($element, options) {
@@ -290,20 +316,24 @@
         };
 
         var slideIn = function (callback) {
-            // Check if something else is active
-            // If it is, then call slideOut on that first
-            var doSlideOutFn = activeElements[options.position];
-            if (doSlideOutFn !== null) {
-                doSlideOutFn(function () {
+            if (!active) {
+                // Check if something else is active
+                // If it is, then call slideOut on that first
+                var doSlideOutFn = activeElements[options.position];
+                if (doSlideOutFn !== null) {
+                    doSlideOutFn(function () {
+                        doSlideIn(callback);
+                    });
+                } else {
                     doSlideIn(callback);
-                });
-            } else {
-                doSlideIn(callback);
+                }
             }
         };
 
         var slideOut = function (callback) {
-            doSlideOut(callback);
+            if (active) {
+                doSlideOut(callback);
+            }
         };
 
         var doSlideIn = function (callback) {
@@ -340,4 +370,4 @@
         return this.data('sliderman', api(createWrapper(this, options), options));
     };
 
-}(jQuery));
+}(window, jQuery));
