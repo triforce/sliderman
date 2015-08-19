@@ -4,12 +4,18 @@
  * Slider-man, Slider-man. Does whatever a slider can.
  */
 (function ($, undefined) {
+    var minSize = 30;
     var initialised = false;
-    var $container = $('<div class="sliderman-container"></div>');
-    var $topRow = $('<div class="sliderman-top-row"></div>');
-    var $middleRow = $('<div class="sliderman-middle-row"></div>');
-    var $middleBuffer = $('<div class="sliderman-middle-buffer"></div>');
-    var $bottomRow = $('<div class="sliderman-bottom-row"></div>');
+
+    var $outerRowContainer  = $('<div class="sliderman-container-outer-row"></div>');
+    var $outerColContainer  = $('<div class="sliderman-container-outer-col"></div>');
+    var $innerRowContainer  = $('<div class="sliderman-container-inner-row"></div>');
+    var $innerColContainer  = $('<div class="sliderman-container-inner-col"></div>');
+    var $middleBuffer       = $('<div class="sliderman-middle-buffer"></div>');
+    var $leftMenuBar        = $('<div class="sliderman-menu sliderman-menu-left"></div>');
+    var $rightMenuBar       = $('<div class="sliderman-menu sliderman-menu-right"></div>');
+    var $topMenuBar         = $('<div class="sliderman-menu sliderman-menu-top"></div>');
+    var $bottomMenuBar      = $('<div class="sliderman-menu sliderman-menu-bottom"></div>');
 
     var activeElements = {
         top: null,
@@ -20,7 +26,20 @@
 
     function init() {
         // Add the slider container elements to body
-        $('body').append($container.append($topRow).append($middleRow.append($middleBuffer)).append($bottomRow));
+        $innerColContainer
+            .append($middleBuffer);
+        $innerRowContainer
+            .append($innerColContainer);
+        $outerColContainer
+            .append($topMenuBar)
+            .append($innerRowContainer)
+            .append($bottomMenuBar);
+        $outerRowContainer
+            .append($leftMenuBar)
+            .append($outerColContainer)
+            .append($rightMenuBar);
+        $('body')
+            .append($outerRowContainer);
 
         // Get all elements with sliderman-main class and append to middle buffer
         $('.sliderman-main').each(function () {
@@ -39,7 +58,8 @@
     }
 
     function createWrapper($element, options) {
-        var positionClass = 'sliderman-' + options.position + '-panel';
+        var positionClass = 'sliderman-panel-' + options.position;
+        var $menuItem = null;
         var $wrapper = $('<div class="sliderman-panel"></div>').addClass(positionClass).hide();
         var $wrapperInner = $('<div class="sliderman-panel-inner"></div>').appendTo($wrapper);
         var $toolbar = createToolbar($element, options).appendTo($wrapperInner);
@@ -66,54 +86,98 @@
 
         var move = function (event) {
             event.preventDefault();
-            var x = event.pageX > 0 ? event.pageX : 0;
-            var y = event.pageY > 0 ? event.pageY : 0;
-            var w = $(document).width();
-            var h = $(document).height();
-            var pos;
+            var offsetX = $innerRowContainer.offset().left;
+            var offsetY = $innerColContainer.offset().top;
+            var x = Math.max(event.pageX - offsetX, 0);
+            var y = Math.max(event.pageY - offsetY, 0);
+            var w = $innerRowContainer.width();
+            var h = $innerColContainer.height();
+            var sizePixels;
+            var sizePercent;
 
             if (options.position === 'left' || options.position === 'right') {
-                pos = (x / w) * 100;
-
                 if (options.position === 'right') {
-                    pos = Math.min(100 - pos, 50);
+                    sizePixels = Math.max(w - x + ($resizer.width() / 2), 0);
                 } else {
-                    pos = Math.min(pos, 50);
+                    sizePixels = Math.max(x - ($resizer.width() / 2), 0);
                 }
 
-                $wrapper.css('width', pos + '%');
+                sizePercent = (sizePixels / w) * 100;
+                $wrapper.css('width', Math.min(sizePercent, 50) + '%');
+            } else {
+                if (options.position === 'top') {
+                    sizePixels = Math.max(y + ($resizer.height() / 2), 0);
+                } else {
+                    sizePixels = Math.max(h - y - ($resizer.height() / 2), 0);
+                }
+                
+                sizePercent = (sizePixels / h) * 100;
+                $wrapper.css('height', Math.min(sizePercent, 50) + '%');
             }
 
-            if (options.position === 'top' || options.position === 'bottom') {
-                pos = ((h - y) / h) * 100;
+            if (sizePixels < minSize) {
+                // Slide out
+                $(document).unbind('mousemove', move);
+                $(document).unbind('mouseup', mouseUp);
 
-                if (options.position === 'top') {
-                    pos = Math.min(100 - pos, 50);
-                    $topRow.css('height', pos + '%');
-                } else {
-                    pos = Math.min(pos, 50);
-                    $bottomRow.css('height', pos + '%');
-                }
+                getApi($element).slideOut(function () {
+                    if (options.position === 'left' || options.position === 'right') {
+                        $wrapper.css('width', '25%');
+                    } else {
+                        $wrapper.css('height', '25%');
+                    }
+                });
             }
         };
 
-        // Move element into container
         if (options.position === 'right') {
+            // Add to menu if option enabled
+            // if (options.showInMenu) {
+            //     $menuItem = $('<div class="sliderman-menu-item">' + options.title + '</div>');
+            //     $rightMenuBar.append($menuItem);
+            //     $rightMenuBar.show();
+            // }
+
+            // Move element into container
             $resizer.prependTo($wrapper);
             $resizer.on('mousedown', hResize);
-            $wrapper.appendTo($middleRow);
+            $wrapper.appendTo($innerRowContainer);
         } else if (options.position === 'left') {
+            // Add to menu if option enabled
+            // if (options.showInMenu) {
+            //     $menuItem = $('<div class="sliderman-menu-item">' + options.title + '</div>');
+            //     $leftMenuBar.append($menuItem);
+            //     $leftMenuBar.show();
+            // }
+            
+            // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', hResize);
-            $wrapper.prependTo($middleRow);
+            $wrapper.prependTo($innerRowContainer);
         } else if (options.position === 'top') {
+            // Add to menu if option enabled
+            // if (options.showInMenu) {
+            //     $menuItem = $('<div class="sliderman-menu-item">' + options.title + '</div>');
+            //     $topMenuBar.append($menuItem);
+            //     $topMenuBar.show();
+            // }
+            
+            // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', vResize);
-            $wrapper.appendTo($topRow);
+            $wrapper.prependTo($innerColContainer);
         } else if (options.position === 'bottom') {
+            // Add to menu if option enabled
+            // if (options.showInMenu) {
+            //     $menuItem = $('<div class="sliderman-menu-item">' + options.title + '</div>');
+            //     $bottomMenuBar.append($menuItem);
+            //     $bottomMenuBar.show();
+            // }
+            
+            // Move element into container
             $resizer.prependTo($wrapper);
             $resizer.on('mousedown', vResize);
-            $wrapper.appendTo($bottomRow);
+            $wrapper.appendTo($innerColContainer);
         }
 
         return $wrapper;
@@ -151,10 +215,8 @@
         var slideDirection;
 
         if (position === 'top') {
-            $topRow.show();
             slideDirection = 'up';
         } else if (position === 'bottom') {
-            $bottomRow.show();
             slideDirection = 'down';
         } else if (position === 'left' || position === 'right') {
             slideDirection = position;
@@ -183,12 +245,6 @@
         $element.toggle('slide', {
             direction: slideDirection
         }, 100, function () {
-            if (position === 'top') {
-                $topRow.hide();
-            } else if (position === 'bottom') {
-                $bottomRow.hide();
-            }
-
             if ($.isFunction(callback)) {
                 callback();
             }
@@ -202,8 +258,52 @@
      */
     function api($element, options) {
         var active = false;
+
         var eventHandlers = {
             slideIn: [], slideOut: []
+        };
+
+        var on = function (events, handler) {
+            $.each(events.split(' '), function (event) {
+                if (eventHandlers[event] !== undefined) {
+                    eventHandlers[event].push(handler);
+                }
+            });
+        };
+
+        var off = function (events, handler) {
+            $.each(events.split(' '), function (event) {
+                if (eventHandlers[event] !== undefined) {
+                    eventHandlers[event] = $.grep(eventHandlers[event], function (el) {
+                        return el !== handler;
+                    });
+                }
+            });
+        };
+
+        var toggle = function () {
+            if (active) {
+                this.slideOut();
+            } else {
+                this.slideIn();
+            }
+        };
+
+        var slideIn = function (callback) {
+            // Check if something else is active
+            // If it is, then call slideOut on that first
+            var doSlideOutFn = activeElements[options.position];
+            if (doSlideOutFn !== null) {
+                doSlideOutFn(function () {
+                    doSlideIn(callback);
+                });
+            } else {
+                doSlideIn(callback);
+            }
+        };
+
+        var slideOut = function (callback) {
+            doSlideOut(callback);
         };
 
         var doSlideIn = function (callback) {
@@ -218,49 +318,16 @@
             animateOut($element, options.position, callback);
         };
 
+        if (options.visible) {
+            slideIn();
+        }
+
         return {
-            on: function (events, handler) {
-                $.each(events.split(' '), function (event) {
-                    if (eventHandlers[event] !== undefined) {
-                        eventHandlers[event].push(handler);
-                    }
-                });
-            },
-
-            off: function (events, handler) {
-                $.each(events.split(' '), function (event) {
-                    if (eventHandlers[event] !== undefined) {
-                        eventHandlers[event] = $.grep(eventHandlers[event], function (el) {
-                            return el !== handler;
-                        });
-                    }
-                });
-            },
-
-            toggle: function () {
-                if (active) {
-                    this.slideOut();
-                } else {
-                    this.slideIn();
-                }
-            },
-
-            slideIn: function (callback) {
-                // Check if something else is active
-                // If it is, then call slideOut on that first
-                var doSlideOutFn = activeElements[options.position];
-                if (doSlideOutFn !== null) {
-                    doSlideOutFn(function () {
-                        doSlideIn(callback);
-                    });
-                } else {
-                    doSlideIn(callback);
-                }
-            },
-
-            slideOut: function (callback) {
-                doSlideOut(callback);
-            }
+            on: on,
+            off: off,
+            toggle: toggle,
+            slideIn: slideIn,
+            slideOut: slideOut
         };
     }
 
