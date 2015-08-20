@@ -5,8 +5,7 @@ div.sliderman-main
 
 div.sliderman-container-outer-row
 {
-    position: absolute;
-    z-index: 2147483647;
+    position: absolute;;
     top: 0;
     left: 0;
     width: 100%;
