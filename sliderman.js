@@ -89,7 +89,6 @@
 
         var throttledWindowResize = (function () {
             var func = function () {
-                console.log('Resize');
                 $(window).resize();
             };
             var wait = 100;
@@ -269,7 +268,7 @@
             direction: slideDirection
         }, 100, function () {
             $(window).resize();
-            
+
             if ($.isFunction(callback)) {
                 callback();
             }
