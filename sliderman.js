@@ -1,13 +1,16 @@
 /**
- * Sliderman v0.0.1
+ * Sliderman
  * Created by Tom Davies
- * Slider-man, Slider-man. Does whatever a slider can.
+ * Sliderman, Sliderman. Does whatever a slider can.
  */
 (function (window, $, undefined) {
     var minSize = 30;
     var initialised = false;
-
-    var $outerRowContainer  = $('<div class="sliderman-container-outer-row"></div>');
+    
+    var $outerRowContainer  = $('.sliderman-container-outer-row');
+    if ($outerRowContainer.length === 0) {
+        $outerRowContainer  = $('<div class="sliderman-container-outer-row"></div>');
+    }
     var $outerColContainer  = $('<div class="sliderman-container-outer-col"></div>');
     var $innerRowContainer  = $('<div class="sliderman-container-inner-row"></div>');
     var $innerColContainer  = $('<div class="sliderman-container-inner-col"></div>');
@@ -104,7 +107,11 @@
             };
         }());
 
-        var move = function (event) {
+        var move = function (event, event2) {
+            if (event2) {
+                event = event2;
+            }
+
             event.preventDefault();
             var offsetX = $innerRowContainer.offset().left;
             var offsetY = $innerColContainer.offset().top;
