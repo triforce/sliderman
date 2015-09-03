@@ -74,6 +74,9 @@
             $(document).on('mousemove', move);
             $(document).on('mousemove', throttledWindowResize);
             $(document).on('mouseup', mouseUp);
+            $(document).on('touchmove', move);
+            $(document).on('touchmove', throttledWindowResize);
+            $(document).on('touchend', touchEnd);
         };
 
         var vResize = function (event) {
@@ -81,6 +84,9 @@
             $(document).on('mousemove', move);
             $(document).on('mousemove', throttledWindowResize);
             $(document).on('mouseup', mouseUp);
+            $(document).on('touchmove', move);
+            $(document).on('touchmove', throttledWindowResize);
+            $(document).on('touchend', touchEnd);
         };
 
         var mouseUp = function (event) {
@@ -88,6 +94,13 @@
             $(document).unbind('mousemove', move);
             $(document).unbind('mousemove', throttledWindowResize);
             $(document).unbind('mouseup', mouseUp);
+        };
+
+        var touchEnd = function (event) {
+            event.preventDefault();
+            $(document).unbind('touchmove', move);
+            $(document).unbind('touchmove', throttledWindowResize);
+            $(document).unbind('touchend', touchEnd);
         };
 
         var throttledWindowResize = (function () {
@@ -113,10 +126,19 @@
             }
 
             event.preventDefault();
+
+            var pageX = event.pageX;
+            var pageY = event.pageY;
+
+            if (event.type === "touchmove") {
+                pageX = event.originalEvent.touches[0].pageX;
+                pageY = event.originalEvent.touches[0].pageY;
+            }
+
             var offsetX = $innerRowContainer.offset().left;
             var offsetY = $innerColContainer.offset().top;
-            var x = Math.max(event.pageX - offsetX, 0);
-            var y = Math.max(event.pageY - offsetY, 0);
+            var x = Math.max(pageX - offsetX, 0);
+            var y = Math.max(pageY - offsetY, 0);
             var w = $innerRowContainer.width();
             var h = $innerColContainer.height();
             var sizePixels;
@@ -146,6 +168,8 @@
                 // Slide out
                 $(document).unbind('mousemove', move);
                 $(document).unbind('mouseup', mouseUp);
+                $(document).unbind('touchmove', move);
+                $(document).unbind('touchend', touchEnd);
 
                 getApi($element).slideOut(function () {
                     if (options.position === 'left' || options.position === 'right') {
@@ -168,6 +192,7 @@
             // Move element into container
             $resizer.prependTo($wrapper);
             $resizer.on('mousedown', hResize);
+            $resizer.on('touchstart', hResize);
             $wrapper.appendTo($innerRowContainer);
         } else if (options.position === 'left') {
             // Add to menu if option enabled
@@ -180,6 +205,7 @@
             // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', hResize);
+            $resizer.on('touchstart', hResize);
             $wrapper.prependTo($innerRowContainer);
         } else if (options.position === 'top') {
             // Add to menu if option enabled
@@ -192,6 +218,7 @@
             // Move element into container
             $resizer.appendTo($wrapper);
             $resizer.on('mousedown', vResize);
+            $resizer.on('touchstart', vResize);
             $wrapper.prependTo($innerColContainer);
         } else if (options.position === 'bottom') {
             // Add to menu if option enabled
@@ -204,6 +231,7 @@
             // Move element into container
             $resizer.prependTo($wrapper);
             $resizer.on('mousedown', vResize);
+            $resizer.on('touchstart', vResize);
             $wrapper.appendTo($innerColContainer);
         }
 
