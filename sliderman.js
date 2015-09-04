@@ -324,17 +324,17 @@
         };
 
         var on = function (events, handler) {
-            $.each(events.split(' '), function (event) {
-                if (eventHandlers[event] !== undefined) {
-                    eventHandlers[event].push(handler);
+            $.each(events.split(' '), function (index, val) {
+                if (eventHandlers[val] !== undefined) {
+                    eventHandlers[val].push(handler);
                 }
             });
         };
 
         var off = function (events, handler) {
-            $.each(events.split(' '), function (event) {
-                if (eventHandlers[event] !== undefined) {
-                    eventHandlers[event] = $.grep(eventHandlers[event], function (el) {
+            $.each(events.split(' '), function (index, val) {
+                if (eventHandlers[val] !== undefined) {
+                    eventHandlers[val] = $.grep(eventHandlers[val], function (el) {
                         return el !== handler;
                     });
                 }
@@ -373,13 +373,35 @@
         var doSlideIn = function (callback) {
             active = true;
             activeElements[options.position] = doSlideOut;
-            animateIn($element, options.position, callback);
+            animateIn($element, options.position, function () {
+                // Call event listeners
+                $.each(eventHandlers['slideIn'], function(index, val) {
+                    if ($.isFunction(val)) {
+                        val($element);
+                    }
+                });
+
+                if ($.isFunction(callback)) {
+                    callback();
+                }
+            });
         };
 
         var doSlideOut = function (callback) {
             active = false;
             activeElements[options.position] = null;
-            animateOut($element, options.position, callback);
+            animateOut($element, options.position, function () {
+                // Call event listeners
+                $.each(eventHandlers['slideOut'], function(index, val) {
+                    if ($.isFunction(val)) {
+                        val($element);
+                    }
+                });
+
+                if ($.isFunction(callback)) {
+                    callback();
+                }
+            });
         };
 
         if (options.visible) {
