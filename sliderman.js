@@ -69,24 +69,11 @@
         var $resizer = $('<div class="sliderman-resizer"></div>');
         $element.addClass('sliderman-panel-content').appendTo($wrapperInner);
 
-        var hResize = function (event) {
+        var mouseDown = function (event) {
             event.preventDefault();
             $(document).on('mousemove', move);
             $(document).on('mousemove', throttledWindowResize);
             $(document).on('mouseup', mouseUp);
-            $(document).on('touchmove', move);
-            $(document).on('touchmove', throttledWindowResize);
-            $(document).on('touchend', touchEnd);
-        };
-
-        var vResize = function (event) {
-            event.preventDefault();
-            $(document).on('mousemove', move);
-            $(document).on('mousemove', throttledWindowResize);
-            $(document).on('mouseup', mouseUp);
-            $(document).on('touchmove', move);
-            $(document).on('touchmove', throttledWindowResize);
-            $(document).on('touchend', touchEnd);
         };
 
         var mouseUp = function (event) {
@@ -96,12 +83,22 @@
             $(document).unbind('mouseup', mouseUp);
         };
 
+        var touchStart = function (event) {
+            event.preventDefault();
+            $(document).on('touchmove', move);
+            $(document).on('touchmove', throttledWindowResize);
+            $(document).on('touchend', touchEnd);
+        };
+
         var touchEnd = function (event) {
             event.preventDefault();
             $(document).unbind('touchmove', move);
             $(document).unbind('touchmove', throttledWindowResize);
             $(document).unbind('touchend', touchEnd);
         };
+
+        $resizer.on('mousedown', mouseDown);
+        $resizer.on('touchstart', touchStart);
 
         var throttledWindowResize = (function () {
             var func = function () {
@@ -191,8 +188,6 @@
 
             // Move element into container
             $resizer.prependTo($wrapper);
-            $resizer.on('mousedown', hResize);
-            $resizer.on('touchstart', hResize);
             $wrapper.appendTo($innerRowContainer);
         } else if (options.position === 'left') {
             // Add to menu if option enabled
@@ -204,8 +199,6 @@
 
             // Move element into container
             $resizer.appendTo($wrapper);
-            $resizer.on('mousedown', hResize);
-            $resizer.on('touchstart', hResize);
             $wrapper.prependTo($innerRowContainer);
         } else if (options.position === 'top') {
             // Add to menu if option enabled
@@ -217,8 +210,6 @@
 
             // Move element into container
             $resizer.appendTo($wrapper);
-            $resizer.on('mousedown', vResize);
-            $resizer.on('touchstart', vResize);
             $wrapper.prependTo($innerColContainer);
         } else if (options.position === 'bottom') {
             // Add to menu if option enabled
@@ -230,8 +221,6 @@
 
             // Move element into container
             $resizer.prependTo($wrapper);
-            $resizer.on('mousedown', vResize);
-            $resizer.on('touchstart', vResize);
             $wrapper.appendTo($innerColContainer);
         }
 
