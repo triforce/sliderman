@@ -5,7 +5,8 @@
   "description": "Create sliding and resizable menu components using JQueryUI and Flexbox.",
   "keywords": [
     "menu",
-    "sliding"
+    "sliding",
+    "flaps"
   ],
   "authors": [
     "Tom Davies <tvdavies@gmail.com> (http://github.com/tvdavies)"
