@@ -312,6 +312,10 @@
             slideIn: [], slideOut: []
         };
 
+        var isActive = function () {
+            return active;
+        };
+
         var on = function (events, handler) {
             $.each(events.split(' '), function (index, val) {
                 if (eventHandlers[val] !== undefined) {
@@ -364,7 +368,7 @@
             activeElements[options.position] = doSlideOut;
             animateIn($element, options.position, function () {
                 // Call event listeners
-                $.each(eventHandlers['slideIn'], function(index, val) {
+                $.each(eventHandlers.slideIn, function(index, val) {
                     if ($.isFunction(val)) {
                         val($element);
                     }
@@ -381,7 +385,7 @@
             activeElements[options.position] = null;
             animateOut($element, options.position, function () {
                 // Call event listeners
-                $.each(eventHandlers['slideOut'], function(index, val) {
+                $.each(eventHandlers.slideOut, function(index, val) {
                     if ($.isFunction(val)) {
                         val($element);
                     }
@@ -398,6 +402,7 @@
         }
 
         return {
+            isActive: isActive,
             on: on,
             off: off,
             toggle: toggle,
